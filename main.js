@@ -1,10 +1,11 @@
 const TelegramBot = require('node-telegram-bot-api');
 
 // Replace 'YOUR_API_TOKEN' with the API token you received from the BotFather
-const TOKEN = "6506226288:AAHY4r9Y0t5iIPGIq7VkKYZgfYQWiKejSkk";
+const TELEGRAM_TOKEN = "6506226288:AAHY4r9Y0t5iIPGIq7VkKYZgfYQWiKejSkk";
+const BALE_TOKEN = "228832439:uxcTGfcNLLTrdSwXP3nEeXEQJI7otCbP3H7azvEe"
 
 // Create a new bot instance
-const bot = new TelegramBot(TOKEN, {polling: true});
+const bot = new TelegramBot(BALE_TOKEN, {polling: true, baseApiUrl: "https://tapi.bale.ai"});
 const userSession = {};
 
 bot.onText(/\/start/, (msg) => {
