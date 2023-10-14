@@ -1,88 +1,101 @@
-const TelegramBot = require('node-telegram-bot-api');
+import emailjs from "@emailjs/nodejs";
+import TelegramBot from "node-telegram-bot-api";
 
 const TELEGRAM_TOKEN = "6506226288:AAHY4r9Y0t5iIPGIq7VkKYZgfYQWiKejSkk";
-const BALE_TOKEN = "228832439:uxcTGfcNLLTrdSwXP3nEeXEQJI7otCbP3H7azvEe"
+const BALE_TOKEN = "228832439:uxcTGfcNLLTrdSwXP3nEeXEQJI7otCbP3H7azvEe";
+
+emailjs.send(
+  "service_w580jyj",
+  "template_s2gfhkn",
+  {
+    from_name: "Diet Bot",
+    phone: "09912121",
+  },
+  "Q4fKfqxDks9Slhok8"
+);
 
 // Create a new bot instance
-const bot = new TelegramBot(BALE_TOKEN, {polling: true, baseApiUrl: "https://tapi.bale.ai"});
+const bot = new TelegramBot(BALE_TOKEN, {
+  polling: true,
+  baseApiUrl: "https://tapi.bale.ai",
+});
 const userSession = {};
+const heightMsg = " لطفا عدد وزن خود را به سانتی متر ارسال کنید، مثال 80";
+const welcomeMsg = "حالا عدد قد خود را ارسال کنید، مثال: 176";
+const phoneMsg = "برای دیدن عدد bmi خود لطفا شماره تلفن خود را وارد کنید";
 
 // Listen for the /start command
 bot.onText(/\/start/, (msg) => {
-    const chatId = msg.chat.id;
-    const reply = "Welcome to the BMI Calculator bot! Please send me your weight (in kg).";
+  // Send the welcome message
+  const chatId = msg.chat.id;
+  bot.sendMessage(chatId, welcomeMsg);
 
-    // Send the welcome message
-    bot.sendMessage(chatId, reply);
-
-    // Set the user's state to "awaitingWeight"
-    userSession[msg.from.id] = {state: "awaitingWeight"};
+  // Set the user's state to "awaitingWeight"
+  userSession[msg.from.id] = { state: "awaitingWeight" };
 });
 
 // Listen for user input
-bot.on('text', (msg) => {
-    const chatId = msg.chat.id;
-    const userId = msg.from.id;
-    const text = msg.text;
+bot.on("text", (msg) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from.id;
+  const text = msg.text;
 
-    if (userSession[userId]) {
-        const userState = userSession[userId].state;
+  if (userSession[userId]) {
+    const userState = userSession[userId].state;
 
-        if (userState === "awaitingWeight" && !isNaN(text)) {
-            userSession[userId].weight = parseFloat(text);
-            userSession[userId].state = "awaitingHeight";
+    if (userState === "awaitingWeight" && !isNaN(text)) {
+      userSession[userId].weight = parseFloat(text);
+      userSession[userId].state = "awaitingHeight";
 
-            // Request the height
-            const reply = "Thanks! Now, please send me your height (in cm).";
-            bot.sendMessage(chatId, reply);
-        } else if (userState === "awaitingHeight" && !isNaN(text)) {
-            userSession[userId].height = parseFloat(text);
-            userSession[userId].state = "awaitingPhoneNumber";
+      // Request the height
+      bot.sendMessage(chatId, heightMsg);
+    } else if (userState === "awaitingHeight" && !isNaN(text)) {
+      userSession[userId].height = parseFloat(text);
+      userSession[userId].state = "awaitingPhoneNumber";
 
-            // Request the phone number
-            const reply = "Great! Now, please send me your phone number (e.g., +1234567890).";
-            bot.sendMessage(chatId, reply);
-        } else if (userState === "awaitingPhoneNumber" && text.match(/^\+\d{10,}$/)) {
-            const weight = userSession[userId].weight;
-            const height = parseFloat(userSession[userId].height) / 100; // Convert cm to meters
-            const bmi = (weight / (height * height)).toFixed(2);
-            userSession[userId].phoneNumber = text;
+      // Request the phone number
+      bot.sendMessage(chatId, phoneMsg);
+    } else if (userState === "awaitingPhoneNumber" && text) {
+      const weight = userSession[userId].weight;
+      const height = parseFloat(userSession[userId].height) / 100; // Convert cm to meters
+      const bmi = (weight / (height * height)).toFixed(2);
+      userSession[userId].phoneNumber = text;
 
-            // Send the BMI calculation result and ask for confirmation
-            const resultMessage = `Your BMI is ${bmi}. Please confirm your phone number: ${text}`;
-            const keyboard = [[{text: 'Yes', callback_data: 'confirm'}]];
-            const options = {reply_markup: {inline_keyboard: keyboard}};
-            bot.sendMessage(chatId, resultMessage, options);
-        } else {
-            const reply = "Invalid input. Please enter a valid value.";
+      // Send the BMI calculation result and ask for confirmation
+      const resultMessage = `Your BMI is ${bmi}.`;
+      const keyboard = [[{ text: "Yes", callback_data: "confirm" }]];
+      const options = { reply_markup: { inline_keyboard: keyboard } };
+      bot.sendMessage(chatId, resultMessage, options);
+    } else {
+      const reply = "Invalid input. Please enter a valid value.";
 
-            // Send an error message for invalid input
-            bot.sendMessage(chatId, reply);
-        }
+      // Send an error message for invalid input
+      bot.sendMessage(chatId, reply);
     }
+  }
 });
 
 // Listen for callback queries (e.g., confirmation)
-bot.on('callback_query', (query) => {
-    const chatId = query.message.chat.id;
-    const userId = query.from.id;
-    const data = query.data;
+bot.on("callback_query", (query) => {
+  const chatId = query.message.chat.id;
+  const userId = query.from.id;
+  const data = query.data;
 
-    if (data === "confirm" && userSession[userId]) {
-        const phoneNumber = userSession[userId].phoneNumber;
+  if (data === "confirm" && userSession[userId]) {
+    const phoneNumber = userSession[userId].phoneNumber;
 
-        // Send a confirmation message with the phone number
-        const confirmationMessage = `Thank you! Your phone number ${phoneNumber} has been confirmed.`;
-        bot.sendMessage(chatId, confirmationMessage);
+    // Send a confirmation message with the phone number
+    const confirmationMessage = `Thank you! Your phone number ${phoneNumber} has been confirmed.`;
+    bot.sendMessage(chatId, confirmationMessage);
 
-        // Reset the user's state
-        delete userSession[userId];
-    }
+    // Reset the user's state
+    delete userSession[userId];
+  }
 });
 
 // Log any errors
-bot.on('polling_error', (error) => {
-    console.error(error);
+bot.on("polling_error", (error) => {
+  console.error(error);
 });
 
-console.log('Bot is running...');
+console.log("Bot is running...");

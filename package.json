@@ -1,9 +1,12 @@
 {
   "name": "dietbot",
+  "type": "module",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
+    "@emailjs/nodejs": "^2.2.0",
+    "emailjs": "^4.0.3",
     "node-telegram-bot-api": "^0.63.0"
   }
 }
