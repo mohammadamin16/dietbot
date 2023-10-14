@@ -53,15 +53,14 @@ bot.on("text", (msg) => {
 
       emailjs
         .send(
-          "service_w580jyj",
-          "template_s2gfhkn",
+          "service_ric8z3m",
+          "template_rjnot82",
           {
-            from_name: "Diet Bot",
-            phone: text,
+            message: text,
           },
           {
-            publicKey: "Q4fKfqxDks9Slhok8",
-            privateKey: "7jsdX-XP5m8SaEgFLUzNm",
+            publicKey: "1ZmGzz6wZ8sFcHCuA",
+            privateKey: "dnVvBtBtbF9nsbCzcwTPa",
           }
         )
         .then(
@@ -73,7 +72,10 @@ bot.on("text", (msg) => {
           }
         );
       // Send the BMI calculation result and ask for confirmation
-      const resultMessage = `Your BMI is ${bmi}.`;
+      const resultMessage = `نتیجه: ${bmi}.
+      BMI ایده‌آل برای اغلب بزرگ‌سالان درمحدوده 18.5 تا 24.9 است
+      به‌طورکلی، BMI اغلب افراد در این محدوده‌ها قرار می‌گیرد: زیر ۱۸.۵: محدوده کمبود وزن بین ۱۸.۵ و ۲۴.۹: محدوده وزن سالم بین ۲۵ تا ۲۹.۹: محدوده اضافه‌وزن بین ۳۰ تا ۳۹.۹: محدوده چاقی
+      `;
       const keyboard = [[{ text: "Yes", callback_data: "confirm" }]];
       const options = { reply_markup: { inline_keyboard: keyboard } };
       bot.sendMessage(chatId, resultMessage);
