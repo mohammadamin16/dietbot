@@ -4,24 +4,14 @@ import TelegramBot from "node-telegram-bot-api";
 const TELEGRAM_TOKEN = "6506226288:AAHY4r9Y0t5iIPGIq7VkKYZgfYQWiKejSkk";
 const BALE_TOKEN = "228832439:uxcTGfcNLLTrdSwXP3nEeXEQJI7otCbP3H7azvEe";
 
-emailjs.send(
-  "service_w580jyj",
-  "template_s2gfhkn",
-  {
-    from_name: "Diet Bot",
-    phone: "09912121",
-  },
-  "Q4fKfqxDks9Slhok8"
-);
-
 // Create a new bot instance
 const bot = new TelegramBot(BALE_TOKEN, {
   polling: true,
   baseApiUrl: "https://tapi.bale.ai",
 });
 const userSession = {};
-const heightMsg = " لطفا عدد وزن خود را به سانتی متر ارسال کنید، مثال 80";
-const welcomeMsg = "حالا عدد قد خود را ارسال کنید، مثال: 176";
+const weightMsg = " لطفا عدد وزن خود را به سانتی متر ارسال کنید، مثال 80";
+const welcomeMsg = "خوش آمدید.عدد قد خود را ارسال کنید، مثال: 176";
 const phoneMsg = "برای دیدن عدد bmi خود لطفا شماره تلفن خود را وارد کنید";
 
 // Listen for the /start command
@@ -48,7 +38,7 @@ bot.on("text", (msg) => {
       userSession[userId].state = "awaitingHeight";
 
       // Request the height
-      bot.sendMessage(chatId, heightMsg);
+      bot.sendMessage(chatId, weightMsg);
     } else if (userState === "awaitingHeight" && !isNaN(text)) {
       userSession[userId].height = parseFloat(text);
       userSession[userId].state = "awaitingPhoneNumber";
@@ -61,11 +51,32 @@ bot.on("text", (msg) => {
       const bmi = (weight / (height * height)).toFixed(2);
       userSession[userId].phoneNumber = text;
 
+      emailjs
+        .send(
+          "service_w580jyj",
+          "template_s2gfhkn",
+          {
+            from_name: "Diet Bot",
+            phone: text,
+          },
+          {
+            publicKey: "Q4fKfqxDks9Slhok8",
+            privateKey: "7jsdX-XP5m8SaEgFLUzNm",
+          }
+        )
+        .then(
+          (response) => {
+            console.log("SUCCESS!", response.status, response.text);
+          },
+          (err) => {
+            console.log("FAILED...", err);
+          }
+        );
       // Send the BMI calculation result and ask for confirmation
       const resultMessage = `Your BMI is ${bmi}.`;
       const keyboard = [[{ text: "Yes", callback_data: "confirm" }]];
       const options = { reply_markup: { inline_keyboard: keyboard } };
-      bot.sendMessage(chatId, resultMessage, options);
+      bot.sendMessage(chatId, resultMessage);
     } else {
       const reply = "Invalid input. Please enter a valid value.";
 
